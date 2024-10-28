@@ -32,4 +32,4 @@
 
 Алексей Ужва
 
-Tg: @uzhvaaa
+VK: [@uzhvaaa](https://vk.com/uzhvaaa)
