@@ -72,7 +72,7 @@ Foodgram: [Фудграм](https://addenerfoodgram.ddns.net/)
     ssh -i путь_до_файла_с_SSH_ключом/название_файла_с_SSH_ключом имя_пользователя@ip_адрес_сервера 
     ```
 
-2. Создайте на сервере директорию kittygram через терминал
+2. Создайте на сервере директорию foodgram через терминал
 
     ```bash
     mkdir foodgram
@@ -91,7 +91,7 @@ Foodgram: [Фудграм](https://addenerfoodgram.ddns.net/)
 4. В директорию foodgram/ скопируйте файлы docker-compose.production.yml и .env:
 
     ```bash
-    scp -i path_to_SSH/SSH_name docker-compose.production.yml username@server_ip:/home/username/kittygram/docker-compose.production.yml
+    scp -i path_to_SSH/SSH_name docker-compose.production.yml username@server_ip:/home/username/foodgram/docker-compose.production.yml
     * ath_to_SSH — путь к файлу с SSH-ключом;
     * SSH_name — имя файла с SSH-ключом (без расширения);
     * username — ваше имя пользователя на сервере;

@@ -1,13 +1,14 @@
-from django.db import transaction
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import transaction
+
 from djoser.serializers import UserSerializer
 from rest_framework import exceptions, serializers
 
 from api.fields import Base64ImageFieldSerializer
-from users.models import Follow
 from recipes.models import (Favourites, Ingredient, Recipe,
                             Tag, IngredientRecipe, ShoppingList)
+from users.models import Follow
 
 
 User = get_user_model()
