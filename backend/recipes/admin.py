@@ -2,7 +2,6 @@ from django.contrib import admin
 from recipes.models import (Favourites, Ingredient, IngredientRecipe,
                             Recipe, ShoppingList, Tag, TagRecipe)
 
-
 class TagAdmin(admin.ModelAdmin):
     """Теги."""
 
