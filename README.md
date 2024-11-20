@@ -1,3 +1,5 @@
+[![foodgram_workflow](https://github.com/Addener/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/Addener/foodgram/actions/workflows/main.yml)
+
 ### Стек технологий:
 [![GitHub%20Actions](https://img.shields.io/badge/-GitHub%20Actions-464646?style=flat-square&logo=GitHub%20actions)](https://github.com/features/actions)
 [![docker](https://img.shields.io/badge/-Docker-464646?style=flat-square&logo=docker)](https://www.docker.com)
