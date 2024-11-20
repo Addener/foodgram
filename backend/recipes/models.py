@@ -1,11 +1,10 @@
-from sqids import Sqids
 from datetime import datetime
-
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db.models import UniqueConstraint
 from django.db import models
+from django.db.models import UniqueConstraint
+from sqids import Sqids
 
 NAME_MAX_LENGTH = 150
 EMAIL_MAX_LENGTH = 254
