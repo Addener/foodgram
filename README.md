@@ -51,7 +51,7 @@ Foodgram: [Фудграм](https://addenerfoodgram.ddns.net/)
     docker build -t username/foodgram_frontend .
     cd ../backend
     docker build -t username/foodgram_backend .
-    cd ../nginx
+    cd ../infra
     docker build -t username/foodgram_gateway . 
     ```
 
