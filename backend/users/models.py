@@ -11,16 +11,16 @@ DEFAULT_AVATAR = 'users/avatar_default.jpg'
 
 
 class FoodgramUser(AbstractUser):
-    """Кастомная модель пользователей."""
+    """Модель пользователя."""
 
     username = models.CharField(
-        'Никнейм пользователя',
+        'Никнейм',
         max_length=NAME_MAX_LENGTH,
         unique=True,
         validators=(UnicodeUsernameValidator(),)
     )
     first_name = models.CharField(
-        'Имя пользователя', max_length=NAME_MAX_LENGTH,
+        'Имя', max_length=NAME_MAX_LENGTH,
     )
     last_name = models.CharField(
         'Фамилия', max_length=NAME_MAX_LENGTH
@@ -58,6 +58,7 @@ class FoodgramUser(AbstractUser):
 
 class Follow(models.Model):
     """Модель подписчиков."""
+
     user = models.ForeignKey(
         FoodgramUser,
         on_delete=models.CASCADE,

@@ -100,21 +100,21 @@ class FoodgramUserViewSet(UserViewSet):
 
 
 class FoodgramReadOnlyModelViewSet(viewsets.ReadOnlyModelViewSet):
-    """ReadOnly model viewset with presets."""
+    """Модель 'только для чтения' с настройками."""
 
     permission_classes = (AllowAny,)
     pagination_class = None
 
 
 class TagViewSet(FoodgramReadOnlyModelViewSet):
-    """Получение списка тегов, конкретного тега."""
+    """Получение конкретного тега или их списка."""
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
 class IngredientViewSet(FoodgramReadOnlyModelViewSet):
-    """Получение списка ингредиентов, конкретного ингредиента."""
+    """Получение конкретного ингредиента, или списка ингредиентов."""
 
     permission_classes = (IsAuthorOrReadOnlyPermission,)
     queryset = Ingredient.objects.all()
@@ -125,20 +125,21 @@ class IngredientViewSet(FoodgramReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для управления рецептами."""
+
     queryset = Recipe.objects.all()
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     permission_classes = (IsAuthorOrReadOnlyPermission,)
 
     def get_serializer_class(self):
-        """Метод для вызова определенного сериализатора."""
+        """Метод вызова определенного сериализатора."""
         if self.action in ('create', 'partial_update'):
             return CreateRecipeSerializer
         return ReadRecipeSerializer
 
     @action(methods=('GET',), detail=True, url_path='get-link')
     def get_link(self, request, pk=None):
-        """Получение короткой ссылки на рецепт."""
+        """Получение короткой ссылки рецепта."""
         recipe = self.get_object()
         short_link = request.build_absolute_uri(f'/{recipe.short_url}')
         data = {'short-link': short_link}
@@ -150,7 +151,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_name='shopping_cart',
             url_path='shopping_cart')
     def add_shopping_item(self, request, pk=None):
-        """Добавление/удаление рецепта из списка покупок."""
+        """Добавление/удаление рецепта из покупок."""
         get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
             return self.__create_obj_recipes(
@@ -199,7 +200,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.__delete_obj_recipes(request, Favourites, pk)
 
     def __create_obj_recipes(self, serializer, request, pk):
-        """Добавить рецепт."""
+        """Добавить."""
         data = {'user': request.user.id, 'recipe': int(pk)}
         serializer_obj = serializer(data=data)
         serializer_obj.is_valid(raise_exception=True)
@@ -207,7 +208,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer_obj.data, status=status.HTTP_201_CREATED)
 
     def __delete_obj_recipes(self, request, model, pk):
-        """Удалить рецепт."""
+        """Удалить."""
         delete_count, _ = model.objects.filter(
             user=request.user, recipe__id=pk
         ).delete()

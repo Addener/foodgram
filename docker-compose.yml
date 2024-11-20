@@ -1,33 +1,34 @@
 volumes:
   static:
-  media:
-  pg_data:
-  redoc:
+  media_value:
+  db_value:
 
 
 services:
-  db:
-    image: postgres:13.0-alpine
+  fg_db:
+    image: postgres:13
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - db_value:/var/lib/postgresql/data/
     env_file:
       - ./.env
 
-  frontend:
-    build: ./frontend/
-    command: cp -r /app/build/. /frontend_static/
-    volumes:
-      - static:/frontend_static
-    depends_on:
-      - db
-
   backend:
     build: ./backend/
-    env_file: .env
-
+    env_file:
+      - ./.env
+    depends_on:
+      - fg_db
     volumes:
-      - static:/backend_static
-      - media:/media
+      - static:/static
+      - media_value:/app/media
+
+  frontend:
+    build: ./frontend/
+    command: cp -r /app/build/. /static/
+    depends_on:
+      - backend
+    volumes:
+      - static:/static
 
   gateway:
     build: ./infra/
@@ -35,5 +36,6 @@ services:
     ports:
       - 8000:80
     volumes:
+      - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/static
-      - media:/media
+      - media_value:/app/media/

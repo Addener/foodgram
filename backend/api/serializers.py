@@ -14,7 +14,7 @@ User = get_user_model()
 
 
 class UserAvatarSerializer(UserSerializer):
-    """Работа с аватаром пользователя."""
+    """Сериализатор для аватара пользователя."""
 
     avatar = Base64ImageFieldSerializer(required=False, allow_null=True)
 
@@ -29,7 +29,7 @@ class UserAvatarSerializer(UserSerializer):
 
 
 class FoodgramUserSerializer(UserAvatarSerializer):
-    """Получение списка пользователей и конкретного пользователя."""
+    """Сериализатор для работы с пользователями."""
 
     is_subscribed = serializers.SerializerMethodField()
 
@@ -46,7 +46,7 @@ class FoodgramUserSerializer(UserAvatarSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        """Проверка подписки пользователя"""
+        """Проверка подписок пользователя."""
         request = self.context.get('request')
         return (
             request
@@ -58,7 +58,7 @@ class FoodgramUserSerializer(UserAvatarSerializer):
 
 
 class FollowCreateSerializer(serializers.ModelSerializer):
-    """Подписки."""
+    """Сериализатор подписки на пользователя."""
 
     class Meta:
         model = Follow
@@ -69,11 +69,11 @@ class FollowCreateSerializer(serializers.ModelSerializer):
         author = data.get('author')
         if user == author:
             raise serializers.ValidationError(
-                'Нельзя подписаться на себя!'
+                'Подписаться на себя нельзя!'
             )
         if Follow.objects.filter(user=user, author=author).exists():
             raise serializers.ValidationError(
-                'Такая подписка уже существует!'
+                'Вы уже подписаны!'
             )
         return data
 
@@ -82,7 +82,7 @@ class FollowCreateSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(FoodgramUserSerializer):
-    """Подписки."""
+    """Сериализатор работы с подписками."""
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -114,7 +114,7 @@ class FollowSerializer(FoodgramUserSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    """Сериализатор модели Тег."""
+    """Сериализатор для модели Тег."""
 
     class Meta:
         model = Tag
@@ -122,7 +122,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Ингредиент."""
+    """Сериализатор для модели ингредиента."""
 
     class Meta:
         model = Ingredient
@@ -254,7 +254,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
-    """Дополнительный сериализатор для рецептов."""
+    """Вспомогательный сериализатор для рецептов."""
 
     class Meta:
         model = Recipe
@@ -342,7 +342,7 @@ class ShoppingListSerializer(serializers.ModelSerializer):
         return ShortRecipeSerializer(instance.recipe).data
 
     def validate(self, data):
-        """Валидация при добавлении рецепта в список покупок."""
+        """Валидация добавления рецепта в список покупок."""
         user = data.get('user')
         recipe = data.get('recipe')
         if ShoppingList.objects.filter(user=user, recipe=recipe).exists():

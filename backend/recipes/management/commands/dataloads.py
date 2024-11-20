@@ -8,9 +8,12 @@ from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
+    """Загрузка ингредиентов."""
+
     help = 'Загрузка ингредиентов.'
 
     def handle(self, *args, **options):
+        """Загрузка csv-файлов."""
         path = os.path.join(settings.BASE_DIR, 'data/ingredients.csv')
         with open(path, 'r', encoding='utf-8') as file:
             reader = DictReader(

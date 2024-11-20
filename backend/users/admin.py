@@ -13,6 +13,7 @@ admin.site.unregister(Group)
 @admin.register(FoodgramUser)
 class FoodgramUserAdmin(admin.ModelAdmin):
     """Создание объекта пользователя в админ панели."""
+
     list_display = (
         'username', 'email', 'first_name', 'last_name'
     )

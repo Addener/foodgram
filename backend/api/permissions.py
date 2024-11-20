@@ -2,17 +2,17 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
 class IsAuthorOrReadOnlyPermission(BasePermission):
-    """Проверка доступов."""
+    """Определение прав доступа."""
 
     def has_permission(self, request, view):
-        """Проверка возможностей для пользоватей."""
+        """Проверка прав доступа для пользоватей."""
         return (
             request.method in SAFE_METHODS
             or request.user.is_authenticated
         )
 
     def has_object_permission(self, request, view, obj):
-        """Проверка возможностей для пользоватей с объектом."""
+        """Проверка прав доступа для пользоватей с объектом."""
         return (
             request.method in SAFE_METHODS
             or obj.author == request.user

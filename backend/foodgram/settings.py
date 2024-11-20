@@ -63,23 +63,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "foodgram.wsgi.application"
 
+DATABASES = {
+   "default": {
+       "ENGINE": os.getenv("DB_ENGINE", default="django.db.backends.postgresql"),
+       "NAME": os.getenv("DB_NAME", default="postgres"),
+       "USER": os.getenv("POSTGRES_USER", default="foodgram_user"),
+       "PASSWORD": os.getenv("POSTGRES_PASSWORD", default="foodgram_password"),
+       "HOST": os.getenv("DB_HOST", default="db"),
+       "PORT": os.getenv("DB_PORT", default="5432"),
+   }
+}
+
+# сервисная часть
 # DATABASES = {
-#    "default": {
-#        "ENGINE": os.getenv("DB_ENGINE", default="django.db.backends.postgresql"),
-#        "NAME": os.getenv("DB_NAME", default="postgres"),
-#        "USER": os.getenv("POSTGRES_USER", default="foodgram_user"),
-#        "PASSWORD": os.getenv("POSTGRES_PASSWORD", default="foodgram_password"),
-#        "HOST": os.getenv("DB_HOST", default="db"),
-#        "PORT": os.getenv("DB_PORT", default="5432"),
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#       'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
 #    }
 # }
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -116,7 +117,7 @@ STATIC_ROOT = BASE_DIR / 'collected_static'
 
 MEDIA_URL = "/media/"
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
 
 AUTH_USER_MODEL = "users.FoodgramUser"
 

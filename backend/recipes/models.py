@@ -10,12 +10,12 @@ from django.db import models
 NAME_MAX_LENGTH = 150
 EMAIL_MAX_LENGTH = 254
 NAME_MAX_LENGTH_RECIPES = 256
-MAX_LENGTH_RECIPES_UNIT_MEASUREMENT = 64
-MAX_LENGTH_SHORT_URL = 20
+RECIPES_UNIT_MEASUREMENT_MAX_LENGTH = 64
+SHORT_URL_MAX_LENGTH = 20
 MIN_VALUE = 1
-MAX_LENGTH_TAG_SLUG = 32
-MAX_LENGTH_TAG_NAME = 32
-NAME_MAX_LENGTH_INGREDIENT = 128
+TAG_SLUG_MAX_LENGTH = 32
+TAG_NAME_MAX_LENGTH = 32
+INGREDIENT_NAME_MAX_LENGTH = 128
 
 User = get_user_model()
 
@@ -25,12 +25,12 @@ class Tag(models.Model):
 
     name = models.CharField(
         'Название тега',
-        max_length=MAX_LENGTH_TAG_NAME,
+        max_length=TAG_NAME_MAX_LENGTH,
         unique=True
     )
     slug = models.SlugField(
         'Уникальный слаг тега',
-        max_length=MAX_LENGTH_TAG_SLUG,
+        max_length=TAG_SLUG_MAX_LENGTH,
         unique=True
     )
 
@@ -47,10 +47,10 @@ class Ingredient(models.Model):
     """Модель ингредиента."""
 
     name = models.CharField(
-        'Название ингредиента', max_length=NAME_MAX_LENGTH_INGREDIENT
+        'Название ингредиента', max_length=INGREDIENT_NAME_MAX_LENGTH
     )
     measurement_unit = models.CharField(
-        'Единица измерения', max_length=MAX_LENGTH_RECIPES_UNIT_MEASUREMENT
+        'Единица измерения', max_length=RECIPES_UNIT_MEASUREMENT_MAX_LENGTH
     )
 
     class Meta:
@@ -112,7 +112,7 @@ class Recipe(models.Model):
     )
 
     short_url = models.CharField(
-        max_length=MAX_LENGTH_SHORT_URL,
+        max_length=SHORT_URL_MAX_LENGTH,
         unique=True,
         db_index=True,
         blank=True
@@ -127,6 +127,7 @@ class Recipe(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        """Создание короткой ссылки."""
         if not self.short_url:
             today = datetime.today()
             keys_for_short_url = [
@@ -141,7 +142,7 @@ class Recipe(models.Model):
 
 
 class IngredientRecipe(models.Model):
-    """Модель для связи рецепта и ингредиентов."""
+    """Модель для связи рецепта и ингредиентов в нем."""
 
     recipe = models.ForeignKey(
         Recipe,
@@ -168,7 +169,7 @@ class IngredientRecipe(models.Model):
 
 
 class TagRecipe(models.Model):
-    """Модель тегов в рецепте."""
+    """Модель для тегов примененных в рецепте."""
 
     recipe = models.ForeignKey(
         Recipe, verbose_name='Рецепт', on_delete=models.CASCADE
@@ -186,6 +187,7 @@ class TagRecipe(models.Model):
 
 
 class FavouritesAndShoppingList(models.Model):
+    """Общая структура для моделей 'Избранное' и 'Список покупок'."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
@@ -222,7 +224,7 @@ class Favourites(FavouritesAndShoppingList):
 
 
 class ShoppingList(FavouritesAndShoppingList):
-    """Список покупок."""
+    """Список списка покупок."""
 
     class Meta:
         verbose_name = 'Корзина'
@@ -236,13 +238,15 @@ class ShoppingList(FavouritesAndShoppingList):
         )
 
     def __str__(self):
-        return f'Рецепт {self.recipe} в списке покупок {self.user.username}'
+        return (f'Рецепт {self.recipe} добавлен в список '
+                f'покупок {self.user.username}')
 
     def clean(self):
+        """Предотвращение повторов рецептов в списке покупок."""
         if ShoppingList.objects.filter(
             user=self.user,
             recipe=self.recipe
         ).exists():
             raise ValidationError({
-                'recipe': 'Рецепт уже в списке покупок.'
+                'recipe': 'Рецепт уже добавлен в список покупок.'
             })
