@@ -213,7 +213,6 @@ class ShoppingList(FavouritesAndShoppingList):
 
     class Meta:
         verbose_name = 'Корзина'
-        related_name = 'shopping_recipe'
         verbose_name_plural = 'Корзина'
         default_related_name = 'shopping_recipe'
         constraints = (
