@@ -195,7 +195,6 @@ class Favourites(FavouritesAndShoppingList):
 
     class Meta:
         verbose_name = 'Избранное'
-        related_name = 'favorites'
         verbose_name_plural = 'Избранное'
         default_related_name = 'favorites'
         constraints = (
