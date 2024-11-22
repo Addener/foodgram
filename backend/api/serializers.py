@@ -203,7 +203,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
                 'Убедитесь, что добавлены ингредиенты!'
             )
 
-        ids = [ing['id'] for ing in ingredients]
+        ids = [ingredient['id'] for ingredient in ingredients]
 
         if len(ids) > len(set(ids)):
             raise serializers.ValidationError(
