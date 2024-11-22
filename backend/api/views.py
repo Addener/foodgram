@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -64,10 +65,17 @@ class FoodgramUserViewSet(UserViewSet):
                 {'avatar': request.build_absolute_uri(user.avatar.url)},
                 status=status.HTTP_200_OK
             )
-
-        self.request.user.avatar = None
-        self.request.user.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        elif request.method == 'DELETE':
+            if user.avatar:
+                file_path = user.avatar.path
+                os.remove(file_path)
+                user.avatar = None
+                user.save()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     @action(detail=False,
             methods=('GET',),
