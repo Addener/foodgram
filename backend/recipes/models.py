@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
+from django.utils import timezone
 from sqids import Sqids
 
 NAME_MAX_LENGTH = 150
@@ -67,15 +68,6 @@ class Ingredient(models.Model):
     def __str__(self):
         return self.name[:50]
 
-    def clean(self):
-        if Ingredient.objects.filter(
-            name=self.name,
-            measurement_unit=self.measurement_unit
-        ).exists():
-            raise ValidationError({
-                'name': 'Ингредиент с данной единицей измерения существует.'
-            })
-
 
 class Recipe(models.Model):
     """Модель рецепта."""
@@ -103,7 +95,7 @@ class Recipe(models.Model):
     text = models.TextField(
         'Описание рецепта', help_text='Заполните описание рецепта'
     )
-    cooking_time = models.PositiveIntegerField(
+    cooking_time = models.SmallIntegerField(
         'Время приготовления в минутах',
         validators=(MinValueValidator(MIN_VALUE),)
     )
@@ -129,9 +121,9 @@ class Recipe(models.Model):
     def save(self, *args, **kwargs):
         """Создание короткой ссылки."""
         if not self.short_url:
-            today = datetime.today()
+            now = timezone.now()
             keys_for_short_url = [
-                round(today.timestamp() * 1000),
+                round(now.timestamp() * 1000),
                 self.author.id,
                 self.cooking_time
             ]
@@ -153,9 +145,10 @@ class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
+        related_name='recipe_ingredients',
         verbose_name='Ингредиент'
     )
-    amount = models.PositiveIntegerField(
+    amount = models.SmallIntegerField(
         verbose_name='Количество ингридиентов',
         validators=(MinValueValidator(MIN_VALUE),)
     )
@@ -172,10 +165,11 @@ class TagRecipe(models.Model):
     """Модель для тегов примененных в рецепте."""
 
     recipe = models.ForeignKey(
-        Recipe, verbose_name='Рецепт', on_delete=models.CASCADE
+        Recipe, verbose_name='Рецепт', related_name='recipe',
+        on_delete=models.CASCADE
     )
     tag = models.ForeignKey(
-        Tag, verbose_name='Тег', on_delete=models.CASCADE
+        Tag, verbose_name='Тег', related_name='tag', on_delete=models.CASCADE
     )
 
     class Meta:
@@ -201,6 +195,7 @@ class Favourites(FavouritesAndShoppingList):
 
     class Meta:
         verbose_name = 'Избранное'
+        related_name = 'favorites'
         verbose_name_plural = 'Избранное'
         default_related_name = 'favorites'
         constraints = (
@@ -213,21 +208,13 @@ class Favourites(FavouritesAndShoppingList):
     def __str__(self):
         return f'Рецепт {self.recipe} в избранном у {self.user.username}'
 
-    def clean(self):
-        if Favourites.objects.filter(
-            user=self.user,
-            recipe=self.recipe
-        ).exists():
-            raise ValidationError({
-                'recipe': 'Рецепт уже в избранном.'
-            })
-
 
 class ShoppingList(FavouritesAndShoppingList):
     """Список списка покупок."""
 
     class Meta:
         verbose_name = 'Корзина'
+        related_name = 'shopping_recipe'
         verbose_name_plural = 'Корзина'
         default_related_name = 'shopping_recipe'
         constraints = (
@@ -240,13 +227,3 @@ class ShoppingList(FavouritesAndShoppingList):
     def __str__(self):
         return (f'Рецепт {self.recipe} добавлен в список '
                 f'покупок {self.user.username}')
-
-    def clean(self):
-        """Предотвращение повторов рецептов в списке покупок."""
-        if ShoppingList.objects.filter(
-            user=self.user,
-            recipe=self.recipe
-        ).exists():
-            raise ValidationError({
-                'recipe': 'Рецепт уже добавлен в список покупок.'
-            })

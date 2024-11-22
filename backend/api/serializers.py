@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from rest_framework import exceptions, serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from djoser.serializers import UserSerializer
 
@@ -315,18 +316,17 @@ class FavouritesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favourites
         fields = ('user', 'recipe')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favourites.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже в избранном!'
+            )
+        ]
 
     def to_representation(self, instance):
         """Метод представления модели."""
         return ShortRecipeSerializer(instance.recipe).data
-
-    def validate(self, data):
-        """Валидация при добавлении рецепта в избранное."""
-        user = data.get('user')
-        recipe = data.get('recipe')
-        if Favourites.objects.filter(user=user, recipe=recipe).exists():
-            raise ValidationError(f'Рецепт {recipe} уже добавлен в избранное!')
-        return data
 
 
 class ShoppingListSerializer(serializers.ModelSerializer):
@@ -335,15 +335,14 @@ class ShoppingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingList
         fields = ('user', 'recipe')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingList.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже в списке покупок!'
+            )
+        ]
 
     def to_representation(self, instance):
         """Метод представления модели."""
         return ShortRecipeSerializer(instance.recipe).data
-
-    def validate(self, data):
-        """Валидация добавления рецепта в список покупок."""
-        user = data.get('user')
-        recipe = data.get('recipe')
-        if ShoppingList.objects.filter(user=user, recipe=recipe).exists():
-            raise ValidationError(f'Рецепт {recipe} уже добавлен в список!')
-        return data
