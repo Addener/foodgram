@@ -87,7 +87,7 @@ class FollowSerializer(FoodgramUserSerializer):
     """Сериализатор работы с подписками."""
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(source='recipes_count')
 
     class Meta:
         model = User
@@ -106,13 +106,10 @@ class FollowSerializer(FoodgramUserSerializer):
     def get_recipes(self, obj):
         request = self.context.get('request')
         limit = request.GET.get('recipes_limit')
-        queryset = Recipe.objects.filter(author=obj)
+        queryset = obj.recipes.all()
         if limit:
             queryset = queryset[:int(limit)]
         return ShortRecipeSerializer(queryset, many=True).data
-
-    def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj).count()
 
 
 class TagSerializer(serializers.ModelSerializer):
