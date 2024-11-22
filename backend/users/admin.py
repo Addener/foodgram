@@ -30,6 +30,3 @@ class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'author')
     search_fields = ('user', 'author')
     empty_value_display = 'Поле не заполнено'
-
-
-admin.site.register(FoodgramUser, FoodgramUserAdmin)
