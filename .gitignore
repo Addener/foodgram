@@ -1,3 +1,4 @@
+backend/collected_static/
 frontend/node_modules
 infra/frontend/build
 .env
