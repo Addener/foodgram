@@ -204,7 +204,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Загружает список покупок."""
         shopping_list_file = self.generate_shopping_list(request.user)
         response = HttpResponse(shopping_list_file, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
+        filename = "shopping_list.txt"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
     @action(methods=('POST', 'DELETE'),
