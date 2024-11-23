@@ -87,7 +87,7 @@ class FollowSerializer(FoodgramUserSerializer):
     """Сериализатор работы с подписками."""
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField(source='recipes_count')
+    recipes_count = serializers.IntegerField()
 
     class Meta:
         model = User

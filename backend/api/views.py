@@ -1,4 +1,4 @@
-import os
+import io
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -27,7 +27,7 @@ from api.serializers import (
     UserAvatarSerializer,
 )
 from recipes.models import (
-    Favourites,
+    Favourite,
     Ingredient,
     IngredientRecipe,
     Recipe,
@@ -67,15 +67,10 @@ class FoodgramUserViewSet(UserViewSet):
             )
         elif request.method == 'DELETE':
             if user.avatar:
-                file_path = user.avatar.path
-                os.remove(file_path)
-                user.avatar = None
-                user.save()
+                user.avatar.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     @action(detail=False,
             methods=('GET',),
@@ -98,25 +93,26 @@ class FoodgramUserViewSet(UserViewSet):
     def subscribe(self, request, id=None):
         """Подписка на автора."""
         user = request.user
-        author = get_object_or_404(User, id=id)
 
         if request.method == 'POST':
-            folow_data = {'user': user.id, 'author': int(id)}
+            author = get_object_or_404(User, id=id)  # Fetch author only for POST
+            if user == author:
+                return Response({'errors': 'Подписаться на себя нельзя!'}, status=status.HTTP_400_BAD_REQUEST)
+            follow_data = {'user': user, 'author': author}
             serializer = FollowCreateSerializer(
-                data=folow_data,
-                context={'request': request, 'user': user})
+                data=follow_data,
+                context={'request': request, 'user': user}
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response(
-                data=serializer.data, status=status.HTTP_201_CREATED
-            )
-        delete_count, _ = Follow.objects.filter(
-            user=user, author=author
-        ).delete()
-        if delete_count == 0:
-            return Response({'errors': 'Вы уже отписались!'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elif request.method == 'DELETE':
+            author = get_object_or_404(User, id=id) # Fetch author for DELETE
+            delete_count, _ = Follow.objects.filter(user=user, author=author).delete()
+            if delete_count == 0:
+                return Response({'errors': 'Вы уже отписались!'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FoodgramReadOnlyModelViewSet(viewsets.ReadOnlyModelViewSet):
@@ -184,25 +180,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(IsAuthenticated,),
             url_path='download_shopping_cart',
             url_name='download_shopping_cart')
-    def download_shopping_list(self, request):
-        """Загрузка списка покупок."""
+    def generate_shopping_list(user):
+        """Generates the shopping list as a bytes object."""
         ingredients = IngredientRecipe.objects.filter(
-            recipe__shopping_recipe__user=request.user
+            recipe__shopping_recipe__user=user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
-        ).order_by('ingredient__name').annotate(sum=Sum('amount'))
-        result = ''
+        ).annotate(sum=Sum('amount')).order_by('ingredient__name')
+
+        shopping_list_buffer = io.BytesIO()
         for ingredient in ingredients:
-            result += (
-                f"{ingredient['ingredient__name']}  - "
-                f"{ingredient['sum']}"
-                f"({ingredient['ingredient__measurement_unit']})\n"
-            )
-        response = HttpResponse(result, content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename="shopping_list.txt"'
-        )
+            line = f"{ingredient['ingredient__name']} - {ingredient['sum']}
+            ({ingredient['ingredient__measurement_unit']})\n".encode('utf-8')
+            shopping_list_buffer.write(line)
+        shopping_list_buffer.seek(0)
+        return shopping_list_buffer
+
+
+    def download_shopping_list(self, request):
+        """Downloads the shopping list."""
+        shopping_list_file = self.generate_shopping_list(request.user)
+        response = HttpResponse(shopping_list_file, content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response
 
     @action(methods=('POST', 'DELETE'),

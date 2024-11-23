@@ -38,7 +38,7 @@ class Tag(models.Model):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.name[:50]
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -63,7 +63,7 @@ class Ingredient(models.Model):
         )
 
     def __str__(self):
-        return self.name[:50]
+        return self.name
 
 
 class Recipe(models.Model):
@@ -82,7 +82,7 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='Ингредиенты'
     )
-    tags = models.ManyToManyField(Tag, verbose_name='Теги')
+    tags = models.ManyToManyField(Tag, verbose_name='Теги') # No need for TagRecipe
     name = models.CharField(
         'Название рецепта', max_length=NAME_MAX_LENGTH_RECIPES
     )
@@ -92,7 +92,7 @@ class Recipe(models.Model):
     text = models.TextField(
         'Описание рецепта', help_text='Заполните описание рецепта'
     )
-    cooking_time = models.SmallIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления в минутах',
         validators=(MinValueValidator(MIN_VALUE),)
     )
@@ -145,7 +145,7 @@ class IngredientRecipe(models.Model):
         related_name='recipe_ingredients',
         verbose_name='Ингредиент'
     )
-    amount = models.SmallIntegerField(
+    amount = models.PositiveSmallIntegerField(
         verbose_name='Количество ингридиентов',
         validators=(MinValueValidator(MIN_VALUE),)
     )
@@ -158,26 +158,7 @@ class IngredientRecipe(models.Model):
         return self.ingredient
 
 
-class TagRecipe(models.Model):
-    """Модель для тегов примененных в рецепте."""
-
-    recipe = models.ForeignKey(
-        Recipe, verbose_name='Рецепт', related_name='recipe',
-        on_delete=models.CASCADE
-    )
-    tag = models.ForeignKey(
-        Tag, verbose_name='Тег', related_name='tag', on_delete=models.CASCADE
-    )
-
-    class Meta:
-        verbose_name = 'Теги'
-        verbose_name_plural = 'Теги'
-
-    def __str__(self):
-        return f'{self.tag} {self.recipe}'
-
-
-class FavouritesAndShoppingList(models.Model):
+class FavouriteAndShoppingList(models.Model):
     """Общая структура для моделей 'Избранное' и 'Список покупок'."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -187,7 +168,7 @@ class FavouritesAndShoppingList(models.Model):
         abstract = True
 
 
-class Favourites(FavouritesAndShoppingList):
+class Favourite(FavouriteAndShoppingList):
     """Модель избранного."""
 
     class Meta:
@@ -205,7 +186,7 @@ class Favourites(FavouritesAndShoppingList):
         return f'Рецепт {self.recipe} в избранном у {self.user.username}'
 
 
-class ShoppingList(FavouritesAndShoppingList):
+class ShoppingList(FavouriteAndShoppingList):
     """Список списка покупок."""
 
     class Meta:

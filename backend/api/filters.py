@@ -9,27 +9,25 @@ class RecipeFilter(FilterSet):
     """Фильтр для отображения избранного и списка покупок."""
 
     tags = filters.ModelMultipleChoiceFilter(
-        queryset=Tag.objects.all(),
         field_name='tags__slug',
-        to_field_name='slug'
+        to_field_name='slug',
+        queryset=Tag.objects.all(),
     )
-    is_favorited = filters.BooleanFilter(method='favorite_filter')
-    is_in_shopping_cart = filters.BooleanFilter(
-        method='shopping_cart_filter'
-    )
+    is_favorited = filters.BooleanFilter(method='filter_favorites')
+    is_in_shopping_cart = filters.BooleanFilter(method='filter_shopping_cart')
 
-    def favorite_filter(self, queryset, name, value):
+    def filter_favorites(self, queryset, name, value):
         """Фильтр для избранного."""
         user = self.request.user
         if value and user.is_authenticated:
-            return queryset.filter(favorites__user_id=user.id)
+            return queryset.filter(favorites__user=user)
         return queryset
 
-    def shopping_cart_filter(self, queryset, name, value):
+    def filter_shopping_cart(self, queryset, name, value):
         """Фильтр для списка покупок."""
         user = self.request.user
         if value and user.is_authenticated:
-            return queryset.filter(shopping_recipe__user_id=user.id)
+            return queryset.filter(shopping_recipe__user=user)
         return queryset
 
     class Meta:
