@@ -180,8 +180,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(IsAuthenticated,),
             url_path='download_shopping_cart',
             url_name='download_shopping_cart')
-    def generate_shopping_list(user):
-        """Generates the shopping list as a bytes object."""
+    def generate_shopping_list(self, user):
+        """Создает список покупок."""
         ingredients = IngredientRecipe.objects.filter(
             recipe__shopping_recipe__user=user
         ).values(
@@ -191,15 +191,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         shopping_list_buffer = io.BytesIO()
         for ingredient in ingredients:
-            line = f"{ingredient['ingredient__name']} - {ingredient['sum']}
-            ({ingredient['ingredient__measurement_unit']})\n".encode('utf-8')
-            shopping_list_buffer.write(line)
+            line = (f"{ingredient['ingredient__name']} - {ingredient['sum']} "
+                    f"({ingredient['ingredient__measurement_unit']})\n")
+            line_bytes = line.encode('utf-8')
+            shopping_list_buffer.write(line_bytes)
         shopping_list_buffer.seek(0)
         return shopping_list_buffer
 
-
     def download_shopping_list(self, request):
-        """Downloads the shopping list."""
+        """Загружает список покупок."""
         shopping_list_file = self.generate_shopping_list(request.user)
         response = HttpResponse(shopping_list_file, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
