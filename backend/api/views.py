@@ -17,7 +17,7 @@ from api.filters import RecipeFilter
 from api.permissions import IsAuthorOrReadOnlyPermission
 from api.serializers import (
     CreateRecipeSerializer,
-    FavouritesSerializer,
+    FavouriteSerializer,
     FollowCreateSerializer,
     FollowSerializer,
     IngredientSerializer,
@@ -95,9 +95,10 @@ class FoodgramUserViewSet(UserViewSet):
         user = request.user
 
         if request.method == 'POST':
-            author = get_object_or_404(User, id=id)  # Fetch author only for POST
+            author = get_object_or_404(User, id=id)
             if user == author:
-                return Response({'errors': 'Подписаться на себя нельзя!'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'errors': 'Подписаться на себя нельзя!'},
+                                status=status.HTTP_400_BAD_REQUEST)
             follow_data = {'user': user, 'author': author}
             serializer = FollowCreateSerializer(
                 data=follow_data,
@@ -107,8 +108,9 @@ class FoodgramUserViewSet(UserViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
-            author = get_object_or_404(User, id=id) # Fetch author for DELETE
-            delete_count, _ = Follow.objects.filter(user=user, author=author).delete()
+            author = get_object_or_404(User, id=id)
+            delete_count, _ = Follow.objects.filter(user=user,
+                                                    author=author).delete()
             if delete_count == 0:
                 return Response({'errors': 'Вы уже отписались!'},
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -215,9 +217,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
             return self.__create_obj_recipes(
-                FavouritesSerializer, request, pk
+                FavouriteSerializer, request, pk
             )
-        return self.__delete_obj_recipes(request, Favourites, pk)
+        return self.__delete_obj_recipes(request, Favourite, pk)
 
     def __create_obj_recipes(self, serializer, request, pk):
         """Добавить."""

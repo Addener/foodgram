@@ -8,7 +8,7 @@ from djoser.serializers import UserSerializer
 
 from api.fields import Base64ImageFieldSerializer
 
-from recipes.models import (Favourites, Ingredient, IngredientRecipe,
+from recipes.models import (Favourite, Ingredient, IngredientRecipe,
                             Recipe, ShoppingList, Tag)
 from users.models import Follow
 
@@ -292,7 +292,7 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
         return (
             request
             and request.user.is_authenticated
-            and Favourites.objects.filter(
+            and Favourite.objects.filter(
                 user=request.user.id, recipe=obj.id
             ).exists()
         )
@@ -309,15 +309,15 @@ class ReadRecipeSerializer(serializers.ModelSerializer):
         )
 
 
-class FavouritesSerializer(serializers.ModelSerializer):
+class FavouriteSerializer(serializers.ModelSerializer):
     """"Сериализатор для модели Избранное."""
 
     class Meta:
-        model = Favourites
+        model = Favourite
         fields = ('user', 'recipe')
         validators = [
             UniqueTogetherValidator(
-                queryset=Favourites.objects.all(),
+                queryset=Favourite.objects.all(),
                 fields=('user', 'recipe'),
                 message='Рецепт уже в избранном!'
             )
