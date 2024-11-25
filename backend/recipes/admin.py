@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from recipes.models import (Tag, Ingredient, Favourites, Recipe,
-                            IngredientRecipe, TagRecipe, ShoppingList)
+from recipes.models import (Tag, Ingredient, Favourite, Recipe,
+                            IngredientRecipe, ShoppingList)
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -29,7 +29,7 @@ class IngredientsInLine(admin.StackedInline):
 class TagsInLine(admin.StackedInline):
     """Теги."""
 
-    model = TagRecipe
+    model = IngredientRecipe
     extra = 1
 
 
@@ -57,7 +57,7 @@ class TagRecipeAdmin(admin.ModelAdmin):
     empty_value_display = 'Поле не заполнено'
 
 
-class FavouritesRecipeAdmin(admin.ModelAdmin):
+class FavouriteRecipeAdmin(admin.ModelAdmin):
     """Избранные рецепты."""
 
     list_display = ('id', 'user', 'recipe',)
@@ -74,5 +74,5 @@ class ShoppingListAdmin(admin.ModelAdmin):
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Favourites, FavouritesRecipeAdmin)
+admin.site.register(Favourite, FavouriteRecipeAdmin)
 admin.site.register(ShoppingList, ShoppingListAdmin)

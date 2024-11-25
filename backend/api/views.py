@@ -2,6 +2,7 @@ import io
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -108,13 +109,18 @@ class FoodgramUserViewSet(UserViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
-            author = get_object_or_404(User, id=id)
-            delete_count, _ = Follow.objects.filter(user=user,
-                                                    author=author).delete()
-            if delete_count == 0:
-                return Response({'errors': 'Вы уже отписались!'},
+            try:
+                id = int(id) # Обработка ошибок некорректного ввода от клиента
+                delete_count, _ = Follow.objects.filter(user=user, author_id=id).delete()
+                if delete_count == 0:
+                    return Response(
+                        {'errors': 'Вы уже отписались от этого автора!'},
+                        status=status.HTTP_400_BAD_REQUEST
+                        )
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            except ValueError:
+                return Response({"error": "Неверный ID автора"},
                                 status=status.HTTP_400_BAD_REQUEST)
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FoodgramReadOnlyModelViewSet(viewsets.ReadOnlyModelViewSet):
@@ -144,7 +150,11 @@ class IngredientViewSet(FoodgramReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для управления рецептами."""
 
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.all().select_related(
+        'author'
+    ).prefetch_related(
+        'ingredients', 'tags'
+    )
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     permission_classes = (IsAuthorOrReadOnlyPermission,)
@@ -182,30 +192,37 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(IsAuthenticated,),
             url_path='download_shopping_cart',
             url_name='download_shopping_cart')
-    def generate_shopping_list(self, user):
-        """Создает список покупок."""
+    def get_shopping_list_data(self, user):
+        """Получает данные для списка покупок из базы данных."""
         ingredients = IngredientRecipe.objects.filter(
             recipe__shopping_recipe__user=user
         ).values(
             'ingredient__name',
-            'ingredient__measurement_unit'
+            'ingredient__measurement_unit',
+            'amount'
         ).annotate(sum=Sum('amount')).order_by('ingredient__name')
+        return ingredients
+
+    def create_shopping_list(self, ingredients):
+        """Создаёт список покупок из данных ингредиентов."""
+        if not ingredients:
+            return io.BytesIO()
 
         shopping_list_buffer = io.BytesIO()
         for ingredient in ingredients:
-            line = (f"{ingredient['ingredient__name']} - {ingredient['sum']} "
-                    f"({ingredient['ingredient__measurement_unit']})\n")
-            line_bytes = line.encode('utf-8')
-            shopping_list_buffer.write(line_bytes)
+            line = (f'{ingredient["ingredient__name"]} - {ingredient["sum"]} '
+                    f'({ingredient["ingredient__measurement_unit"]})\n')
+            shopping_list_buffer.write(line.encode('utf-8'))
         shopping_list_buffer.seek(0)
         return shopping_list_buffer
 
     def download_shopping_list(self, request):
         """Загружает список покупок."""
-        shopping_list_file = self.generate_shopping_list(request.user)
+        ingredients = self.get_shopping_list_data(request.user)
+        shopping_list_file = self.create_shopping_list(ingredients)
         response = HttpResponse(shopping_list_file, content_type='text/plain')
-        filename = "shopping_list.txt"
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Disposition'] = ('attachment; '
+                                           'filename="shopping_list.txt"')
         return response
 
     @action(methods=('POST', 'DELETE'),
@@ -239,3 +256,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response({'errors': 'Рецепт уже удален'},
                             status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def redirect_to_full_recipe(request, short_url):
+    """Перенаправление к полному рецепту."""
+    recipe = get_object_or_404(Recipe, short_url=short_url)
+    full_url = f'/recipes/{recipe.id}'
+    return HttpResponseRedirect(full_url)
