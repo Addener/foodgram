@@ -110,13 +110,13 @@ class FoodgramUserViewSet(UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
             try:
-                id = int(id) # Обработка ошибок некорректного ввода от клиента
-                delete_count, _ = Follow.objects.filter(user=user, author_id=id).delete()
+                id = int(id)
+                delete_count, _ = Follow.objects.filter(user=user,
+                                                        author_id=id).delete()
                 if delete_count == 0:
                     return Response(
                         {'errors': 'Вы уже отписались от этого автора!'},
-                        status=status.HTTP_400_BAD_REQUEST
-                        )
+                        status=status.HTTP_400_BAD_REQUEST)
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except ValueError:
                 return Response({"error": "Неверный ID автора"},
