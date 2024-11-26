@@ -109,18 +109,14 @@ class FoodgramUserViewSet(UserViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
-            try:
-                id = int(id)
-                delete_count, _ = Follow.objects.filter(user=user,
-                                                        author_id=id).delete()
-                if delete_count == 0:
-                    return Response(
-                        {'errors': 'Вы уже отписались от этого автора!'},
-                        status=status.HTTP_400_BAD_REQUEST)
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except ValueError:
-                return Response({"error": "Неверный ID автора"},
-                                status=status.HTTP_400_BAD_REQUEST)
+            id = int(id)
+            delete_count, _ = Follow.objects.filter(user=user,
+                                                    author_id=id).delete()
+            if delete_count == 0:
+                return Response(
+                    {'errors': 'Вы уже отписались от этого автора!'},
+                    status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FoodgramReadOnlyModelViewSet(viewsets.ReadOnlyModelViewSet):
@@ -173,7 +169,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         data = {'short-link': short_link}
         return Response(data, status=status.HTTP_200_OK)
 
-    @action(methods=('POST', 'DELETE',),
+    @action(methods=('POST', 'DELETE'),
             detail=True,
             permission_classes=(IsAuthenticated,),
             url_name='shopping_cart',
@@ -181,10 +177,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def add_shopping_item(self, request, pk=None):
         """Добавление/удаление рецепта из покупок."""
         get_object_or_404(Recipe, id=pk)
+
         if request.method == 'POST':
-            return self.__create_obj_recipes(
-                ShoppingListSerializer, request, pk
-            )
+            return self.__create_obj_recipes(ShoppingListSerializer, request,
+                                             pk)
         return self.__delete_obj_recipes(request, ShoppingList, pk)
 
     @action(methods=('GET',),
@@ -192,16 +188,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=(IsAuthenticated,),
             url_path='download_shopping_cart',
             url_name='download_shopping_cart')
-    def get_shopping_list_data(self, user):
-        """Получает данные для списка покупок из базы данных."""
-        ingredients = IngredientRecipe.objects.filter(
-            recipe__shopping_recipe__user=user
-        ).values(
-            'ingredient__name',
-            'ingredient__measurement_unit',
-            'amount'
-        ).annotate(sum=Sum('amount')).order_by('ingredient__name')
-        return ingredients
+    def download_shopping_list(self, request):
+        """Загрузка списка покупок."""
+        try:
+            ingredients = IngredientRecipe.objects.filter(
+                recipe__shopping_recipe__user=request.user
+            ).values(
+                'ingredient__name',
+                'ingredient__measurement_unit',
+                'amount'
+            ).annotate(sum=Sum('amount')).order_by('ingredient__name')
+
+            shopping_list_file = self.create_shopping_list(ingredients)
+            response = HttpResponse(shopping_list_file,
+                                    content_type='text/plain; charset=utf-8')
+            response['Content-Disposition'] = ('attachment; '
+                                               'filename="shopping_list.txt"')
+            return response
+        except IngredientRecipe.DoesNotExist:
+            return Response({"detail": "Shopping list is empty"},
+                            status=status.HTTP_404_NOT_FOUND)
 
     def create_shopping_list(self, ingredients):
         """Создаёт список покупок из данных ингредиентов."""
@@ -215,15 +221,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             shopping_list_buffer.write(line.encode('utf-8'))
         shopping_list_buffer.seek(0)
         return shopping_list_buffer
-
-    def download_shopping_list(self, request):
-        """Загружает список покупок."""
-        ingredients = self.get_shopping_list_data(request.user)
-        shopping_list_file = self.create_shopping_list(ingredients)
-        response = HttpResponse(shopping_list_file, content_type='text/plain')
-        response['Content-Disposition'] = ('attachment; '
-                                           'filename="shopping_list.txt"')
-        return response
 
     @action(methods=('POST', 'DELETE'),
             detail=True,

@@ -20,6 +20,12 @@
 
 Foodgram: [Фудграм](https://addenerfoodgram.ddns.net/)
 
+### Данные для андмин панели:
+```bash
+     login foodadmin@ya.ru
+     password foodadmin1234
+    ```
+
 
 ### Что умеет проект:
 
