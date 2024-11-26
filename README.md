@@ -21,7 +21,7 @@
 Foodgram: [Фудграм](https://addenerfoodgram.ddns.net/)
 
 ### Данные для андмин панели:
-```bash
+    ```bash
      login foodadmin@ya.ru
      password foodadmin1234
     ```
