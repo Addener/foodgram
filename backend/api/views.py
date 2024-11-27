@@ -191,11 +191,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_list(self, request):
         """Загрузка списка покупок."""
         ingredients = IngredientRecipe.objects.filter(
-            recipe__shopping_recipe__user=request.user).values(
-                'ingredient__name',
-                'ingredient__measurement_unit',
-                'amount'
-            ).annotate(sum=Sum('amount')).order_by('ingredient__name')
+            recipe__shopping_recipe__user=request.user
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit',
+            'amount'
+        ).annotate(sum=Sum('amount')).order_by('ingredient__name')
         shopping_list_file = self.create_shopping_list(ingredients)
         response = HttpResponse(shopping_list_file,
                                 content_type='text/plain; charset=utf-8')
