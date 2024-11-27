@@ -82,7 +82,10 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='Ингредиенты'
     )
-    tags = models.ManyToManyField(Tag, verbose_name='Теги')
+    tags = models.ManyToManyField(
+        Tag,
+        verbose_name='Теги'
+    )
     name = models.CharField(
         'Название рецепта', max_length=NAME_MAX_LENGTH_RECIPES
     )

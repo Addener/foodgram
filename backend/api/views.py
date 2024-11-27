@@ -190,24 +190,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_name='download_shopping_cart')
     def download_shopping_list(self, request):
         """Загрузка списка покупок."""
-        try:
-            ingredients = IngredientRecipe.objects.filter(
-                recipe__shopping_recipe__user=request.user
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__shopping_recipe__user=request.user
             ).values(
-                'ingredient__name',
-                'ingredient__measurement_unit',
-                'amount'
+            'ingredient__name',
+            'ingredient__measurement_unit',
+            'amount'
             ).annotate(sum=Sum('amount')).order_by('ingredient__name')
-
-            shopping_list_file = self.create_shopping_list(ingredients)
-            response = HttpResponse(shopping_list_file,
-                                    content_type='text/plain; charset=utf-8')
-            response['Content-Disposition'] = ('attachment; '
-                                               'filename="shopping_list.txt"')
-            return response
-        except IngredientRecipe.DoesNotExist:
-            return Response({"detail": "Shopping list is empty"},
-                            status=status.HTTP_404_NOT_FOUND)
+        shopping_list_file = self.create_shopping_list(ingredients)
+        response = HttpResponse(shopping_list_file,
+                                content_type='text/plain; charset=utf-8')
+        response['Content-Disposition'] = ('attachment; '
+                                           'filename="shopping_list.txt"')
+        return response
 
     def create_shopping_list(self, ingredients):
         """Создаёт список покупок из данных ингредиентов."""

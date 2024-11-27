@@ -12,11 +12,12 @@ admin.site.unregister(Group)
 class FoodgramUserAdmin(UserAdmin):
     """Создание объекта пользователя в админ панели."""
 
-    list_display = (
+    list_display = [
         'username', 'email', 'first_name', 'last_name'
-    )
-    list_filter = ('email', 'username')
-    search_fields = ('email', 'username')
+    ]
+    list_display_links = ['username', 'email']
+    list_filter = ('email', 'username', 'first_name', 'last_name')
+    search_fields = ('email', 'username', 'first_name', 'last_name')
     empty_value_display = 'Поле не заполнено'
 
 
@@ -24,6 +25,12 @@ class FoodgramUserAdmin(UserAdmin):
 class SubscriptionAdmin(admin.ModelAdmin):
     """Создание объекта подписки в админ панели."""
 
-    list_display = ('id', 'user', 'author')
+    list_display = ['id', 'user', 'author']
+    list_display_links = ['id', 'user']
     search_fields = ('user', 'author')
     empty_value_display = 'Поле не заполнено'
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.select_related('user', 'author')
+        return queryset
