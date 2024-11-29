@@ -109,13 +109,13 @@ class FoodgramUserViewSet(UserViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
-            id = int(id)
             delete_count, _ = Follow.objects.filter(user=user,
                                                     author_id=id).delete()
             if delete_count == 0:
                 return Response(
                     {'errors': 'Вы уже отписались от этого автора!'},
-                    status=status.HTTP_400_BAD_REQUEST)
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -176,12 +176,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_path='shopping_cart')
     def add_shopping_item(self, request, pk=None):
         """Добавление/удаление рецепта из покупок."""
-        get_object_or_404(Recipe, id=pk)
-
+        recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
             return self.__create_obj_recipes(ShoppingListSerializer, request,
-                                             pk)
-        return self.__delete_obj_recipes(request, ShoppingList, pk)
+                                             recipe)
+        return self.__delete_obj_recipes(request, ShoppingList, recipe)
 
     @action(methods=('GET',),
             detail=False,
@@ -224,12 +223,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_name='favorite')
     def favorite(self, request, pk=None):
         """Добавление/удаление рецепта в избранное."""
-        get_object_or_404(Recipe, id=pk)
+        recipe = get_object_or_404(Recipe, id=pk)
         if request.method == 'POST':
             return self.__create_obj_recipes(
-                FavouriteSerializer, request, pk
+                FavouriteSerializer, request, recipe
             )
-        return self.__delete_obj_recipes(request, Favourite, pk)
+        return self.__delete_obj_recipes(request, Favourite, recipe)
 
     def __create_obj_recipes(self, serializer, request, pk):
         """Добавить."""

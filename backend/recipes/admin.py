@@ -8,9 +8,8 @@ from recipes.models import (Tag, Ingredient, Favourite, Recipe,
 class TagAdmin(admin.ModelAdmin):
     """Теги."""
 
-    list_display = ['id', 'name', 'slug']
-    list_display_links = ['id', 'name']
-    list_filter = ('id', 'name')
+    list_display = ('id', 'name', 'slug')
+    list_display_links = ('id', 'name')
     search_fields = ('name',)
     empty_value_display = 'Поле не заполнено'
 
@@ -20,8 +19,8 @@ class IngredientAdmin(admin.ModelAdmin):
     """Ингредиент."""
 
     list_display = ('id', 'name', 'measurement_unit')
-    list_display_links = ['id', 'name']
-    search_fields = ('id', 'name')
+    list_display_links = ('id', 'name')
+    search_fields = ('name',)
     empty_value_display = 'Поле не заполнено'
 
 
@@ -43,17 +42,17 @@ class TagsInLine(admin.StackedInline):
 class RecipeAdmin(admin.ModelAdmin):
     """Рецепты."""
 
-    list_display = ['id', 'name', 'author', 'pub_date', 'text']
-    list_display_links = ['id', 'name', 'author']
+    list_display = ('id', 'name', 'author', 'pub_date', 'text')
+    list_display_links = ('id', 'name', 'author')
     search_fields = ('name', 'author')
-    list_filter = ('author', 'name', 'tags')
+    list_filter = ('tags',)
     inlines = (IngredientsInLine, TagsInLine)
     empty_value_display = 'Поле не заполнено'
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.select_related('author') \
-                           .prefetch_related('tags', 'ingredients')
+        queryset = (queryset.select_related('author')
+                    .prefetch_related('tags', 'ingredients'))
         return queryset
 
 
@@ -75,9 +74,9 @@ class TagRecipeAdmin(admin.ModelAdmin):
 class FavouriteRecipeAdmin(admin.ModelAdmin):
     """Избранные рецепты."""
 
-    list_display = ['id', 'user', 'recipe']
-    list_display_links = ['id', 'user']
-    list_filter = ('id', 'user')
+    list_display = ('id', 'user', 'recipe')
+    list_display_links = ('id', 'user')
+    list_filter = ('user',)
     empty_value_display = 'Поле не заполнено'
 
 
@@ -85,6 +84,6 @@ class FavouriteRecipeAdmin(admin.ModelAdmin):
 class ShoppingListAdmin(admin.ModelAdmin):
     """Список покупок."""
 
-    list_display = ['id', 'user', 'recipe']
-    list_display_links = ['id', 'user']
+    list_display = ('id', 'user', 'recipe')
+    list_display_links = ('id', 'user')
     empty_value_display = 'Поле не заполнено'
